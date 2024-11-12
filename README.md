@@ -25,13 +25,14 @@
 
    - Implement a feature to add characters to a "Favorites" list.
 
-5. **Additional Filters**
-   - Add filters for character status and species.
+5. **Additional Filters** (Bonus)
+   - Implement additional filters for character status and species.
    - Use the API's filtering options as outlined here: [Filter Characters](https://rickandmortyapi.com/documentation/#filter-characters).
+   - **Bonus**: This is an optional part of the task, but additional points will be awarded for implementing it.
 
 ## Figma
 
-- **Figma Designs**: https://www.figma.com/design/Ui91kU1cPRnMYW09DorLK1/Rick-%26-Morty-Task?node-id=1-4&node-type=frame&t=oBLfPY7TKHsb25Vm-0
+- **Figma Designs**: [Rick & Morty Task Figma](https://www.figma.com/design/Ui91kU1cPRnMYW09DorLK1/Rick-%26-Morty-Task?node-id=0-1&node-type=canvas&t=WssIWdkm0D13Vqtq-0)
 
 ## Technical Details
 
