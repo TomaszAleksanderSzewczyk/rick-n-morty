@@ -1,7 +1,7 @@
 import React from 'react';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import {CharacterListStack} from '../CharacterList';
-import {FavoriteCharactersStack} from '../FavoriteCharacters';
+import {CharacterListScreen} from './screens/CharacterList';
+import {FavoriteCharactersScreen} from './screens/FavoriteCharacters';
 
 const Tab = createBottomTabNavigator();
 
@@ -10,12 +10,12 @@ export const TabNavigationStack = () => {
     <Tab.Navigator>
       <Tab.Screen
         name="Characters"
-        component={CharacterListStack}
+        component={CharacterListScreen}
         options={{headerShown: false}}
       />
       <Tab.Screen
         name="Favorites"
-        component={FavoriteCharactersStack}
+        component={FavoriteCharactersScreen}
         options={{headerShown: false}}
       />
     </Tab.Navigator>
