@@ -1,13 +1,197 @@
-import {Text, View} from 'react-native';
-import React from 'react';
+import React, {useLayoutEffect} from 'react';
+import {
+  View,
+  Text,
+  Image,
+  ScrollView,
+  Pressable,
+  ActivityIndicator,
+  Platform,
+  StatusBar,
+  SafeAreaView,
+} from 'react-native';
+import {useRoute, useNavigation, RouteProp} from '@react-navigation/native';
 import {styles} from './CharacterDetails.styled';
+import {MaterialIcons} from '@expo/vector-icons';
+import {useAtom} from 'jotai';
+import {
+  favoritesAtom,
+  addToFavorites,
+  removeFromFavorites,
+  isFavorite,
+} from '../../../../atoms/favorites';
+import {CharacterDetailsStackParamList} from '../../CharacterDetails.routes';
+import {Character, fetchCharacterById} from '../../../../api/character';
+import {useQuery} from '@tanstack/react-query';
 
-const CharacterDetailsScreen = () => {
+type CharacterDetailsParams = {
+  id: number;
+};
+
+type CharacterDetailsRouteProp = RouteProp<
+  CharacterDetailsStackParamList,
+  'CharacterDetailsScreen'
+>;
+
+const CharacterDetails: React.FC = () => {
+  const route = useRoute<CharacterDetailsRouteProp>();
+  const navigation = useNavigation();
+  const [favorites, setFavorites] = useAtom(favoritesAtom);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerShown: false,
+      headerTitle: '',
+    });
+  }, [navigation]);
+
+  const id =
+    route.params && typeof route.params === 'object' && 'id' in route.params
+      ? (route.params as CharacterDetailsParams).id
+      : undefined;
+
+  const {
+    data: character,
+    isLoading,
+    error,
+    isFetching,
+  } = useQuery<Character>({
+    enabled: !!id,
+    queryKey: ['character', id],
+    queryFn: async () => {
+      if (id == null) {
+        throw new Error('No character id provided');
+      }
+      return fetchCharacterById(id);
+    },
+  });
+
+  const isFavorited = character ? isFavorite(character.id, favorites) : false;
+  const toggleFavorite = () => {
+    if (!character) return;
+
+    if (isFavorited) {
+      removeFromFavorites(character.id, setFavorites, favorites);
+    } else {
+      addToFavorites(character, setFavorites, favorites);
+    }
+  };
+
+  const handleGoBack = () => navigation.goBack();
+
+  const GoBackButton = () => (
+    <Pressable onPress={handleGoBack} style={styles.goBackButtonContainer}>
+      <Text style={styles.goBackButtonText}>← Go back to Characters List</Text>
+    </Pressable>
+  );
+
+  const Wrapper = ({children}: {children: React.ReactNode}) => (
+    <SafeAreaView
+      style={[
+        styles.rootContainer,
+        {paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0},
+      ]}>
+      {children}
+    </SafeAreaView>
+  );
+
+  if (isLoading && isFetching) {
+    return (
+      <Wrapper>
+        <GoBackButton />
+        <View style={styles.loaderContainer}>
+          <ActivityIndicator size="large" color="#2C3E34" />
+          <Text style={styles.loadingText}>Loading character details...</Text>
+        </View>
+      </Wrapper>
+    );
+  }
+
+  if (error) {
+    return (
+      <Wrapper>
+        <View style={styles.errorContainer}>
+          <Text style={[styles.errorText, {color: 'red', fontSize: 20}]}>
+            Failed to load character details. Please try again.
+          </Text>
+          <Pressable onPress={handleGoBack} style={styles.backButton}>
+            <Text style={styles.backButtonText}>Go Back</Text>
+          </Pressable>
+        </View>
+      </Wrapper>
+    );
+  }
+
+  if (!character) {
+    return (
+      <Wrapper>
+        <GoBackButton />
+        <View style={styles.errorContainer}>
+          <Text style={[styles.errorText, {color: 'orange', fontSize: 20}]}>
+            Character not found.
+          </Text>
+          <Pressable onPress={handleGoBack} style={styles.backButton}>
+            <Text style={styles.backButtonText}>Go Back</Text>
+          </Pressable>
+        </View>
+      </Wrapper>
+    );
+  }
+
   return (
-    <View style={styles.container}>
-      <Text>Implement CharacterDetailsScreen</Text>
-    </View>
+    <Wrapper>
+      <GoBackButton />
+      <ScrollView contentContainerStyle={styles.container}>
+        <Image source={{uri: character?.image ?? ''}} style={styles.avatar} />
+
+        <Text style={styles.label}>NAME</Text>
+        <Text style={styles.name}>{character?.name ?? 'Unknown'}</Text>
+
+        <View style={styles.infoRow}>
+          <View style={styles.infoCard}>
+            <Text style={styles.cardLabel}>STATUS</Text>
+            <Text style={styles.cardValue}>
+              {character?.status ?? 'Unknown'}
+            </Text>
+          </View>
+          <View style={styles.infoCard}>
+            <Text style={styles.cardLabel}>ORIGIN</Text>
+            <Text style={styles.cardValue}>
+              {character?.origin?.name ?? 'Unknown'}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.infoRow}>
+          <View style={styles.infoCard}>
+            <Text key={'SPECIES'} style={styles.cardLabel}>
+              SPECIES
+            </Text>
+            <Text style={styles.cardValue}>
+              {character?.species ?? 'Unknown'}
+            </Text>
+          </View>
+          <View style={styles.infoCard}>
+            <Text style={styles.cardLabel}>GENDER</Text>
+            <Text style={styles.cardValue}>
+              {character?.gender ?? 'Unknown'}
+            </Text>
+          </View>
+        </View>
+
+        <Pressable style={styles.likeButton} onPress={toggleFavorite}>
+          <MaterialIcons
+            name={isFavorited ? 'star' : 'star-border'}
+            size={20}
+            style={[styles.likeIcon, isFavorited && {color: '#FFD700'}]}
+          />
+          <Text style={styles.likeText}>
+            {isFavorited ? 'REMOVE FROM LIKED' : 'ADD TO LIKED'}
+          </Text>
+        </Pressable>
+      </ScrollView>
+    </Wrapper>
   );
 };
 
-export default CharacterDetailsScreen;
+export default CharacterDetails;
