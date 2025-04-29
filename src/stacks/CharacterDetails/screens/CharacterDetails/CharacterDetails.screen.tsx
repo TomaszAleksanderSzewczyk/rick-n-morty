@@ -6,6 +6,9 @@ import {
   ScrollView,
   Pressable,
   ActivityIndicator,
+  Platform,
+  StatusBar,
+  SafeAreaView,
 } from 'react-native';
 import {useRoute, useNavigation, RouteProp} from '@react-navigation/native';
 import {styles} from './CharacterDetails.styled';
@@ -20,6 +23,7 @@ import {
 import {CharacterDetailsStackParamList} from '../../CharacterDetails.routes';
 import {Character, fetchCharacterById} from '../../../../api/character';
 import {useQuery} from '@tanstack/react-query';
+
 type CharacterDetailsParams = {
   id: number;
 };
@@ -28,6 +32,7 @@ type CharacterDetailsRouteProp = RouteProp<
   CharacterDetailsStackParamList,
   'CharacterDetailsScreen'
 >;
+
 const CharacterDetails: React.FC = () => {
   const route = useRoute<CharacterDetailsRouteProp>();
   const navigation = useNavigation();
@@ -71,28 +76,40 @@ const CharacterDetails: React.FC = () => {
       addToFavorites(character, setFavorites, favorites);
     }
   };
+
   const handleGoBack = () => navigation.goBack();
+
   const GoBackButton = () => (
     <Pressable onPress={handleGoBack} style={styles.goBackButtonContainer}>
       <Text style={styles.goBackButtonText}>← Go back to Characters List</Text>
     </Pressable>
   );
 
+  const Wrapper = ({children}: {children: React.ReactNode}) => (
+    <SafeAreaView
+      style={[
+        styles.rootContainer,
+        {paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0},
+      ]}>
+      {children}
+    </SafeAreaView>
+  );
+
   if (isLoading && isFetching) {
     return (
-      <View style={styles.rootContainer}>
+      <Wrapper>
         <GoBackButton />
         <View style={styles.loaderContainer}>
           <ActivityIndicator size="large" color="#2C3E34" />
           <Text style={styles.loadingText}>Loading character details...</Text>
         </View>
-      </View>
+      </Wrapper>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.rootContainer}>
+      <Wrapper>
         <View style={styles.errorContainer}>
           <Text style={[styles.errorText, {color: 'red', fontSize: 20}]}>
             Failed to load character details. Please try again.
@@ -101,13 +118,13 @@ const CharacterDetails: React.FC = () => {
             <Text style={styles.backButtonText}>Go Back</Text>
           </Pressable>
         </View>
-      </View>
+      </Wrapper>
     );
   }
 
   if (!character) {
     return (
-      <View style={styles.rootContainer}>
+      <Wrapper>
         <GoBackButton />
         <View style={styles.errorContainer}>
           <Text style={[styles.errorText, {color: 'orange', fontSize: 20}]}>
@@ -117,12 +134,12 @@ const CharacterDetails: React.FC = () => {
             <Text style={styles.backButtonText}>Go Back</Text>
           </Pressable>
         </View>
-      </View>
+      </Wrapper>
     );
   }
 
   return (
-    <View style={styles.rootContainer}>
+    <Wrapper>
       <GoBackButton />
       <ScrollView contentContainerStyle={styles.container}>
         <Image source={{uri: character?.image ?? ''}} style={styles.avatar} />
@@ -173,7 +190,7 @@ const CharacterDetails: React.FC = () => {
           </Text>
         </Pressable>
       </ScrollView>
-    </View>
+    </Wrapper>
   );
 };
 
